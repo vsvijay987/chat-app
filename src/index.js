@@ -17,8 +17,14 @@ io.on('connection', (socket) => {
 
     socket.emit('message', 'Welcome!');
 
+    socket.broadcast.emit('message', 'A new user has joined!')
+
     socket.on('sendMessage', (value) => {
         io.emit('message', value)
+    })
+
+    socket.on('disconnect', () => {
+        io.emit('message', 'A user has left the chat!')
     })
 })
 
