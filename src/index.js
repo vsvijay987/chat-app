@@ -11,16 +11,14 @@ const port = process.env.PORT || 3000;
 
 const publicDirectoryPath = path.join(__dirname, '../public');
 
-let count = 0;
 
 io.on('connection', (socket) => {
     console.log('New websocket connection')
 
-    socket.emit('countUpdated', count)
+    socket.emit('message', 'Welcome!');
 
-    socket.on('increment', () => {
-        count++;
-        io.emit('countUpdated', count)
+    socket.on('sendMessage', (value) => {
+        io.emit('message', value)
     })
 })
 
