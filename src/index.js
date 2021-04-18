@@ -20,9 +20,15 @@ const publicDirectoryPath = path.join(__dirname, '../public');
 io.on('connection', (socket) => {
     console.log('New websocket connection')
 
-    socket.emit('message', generateMessage('Welcome'));
+    socket.on('join', ( {username, room} ) => {
 
-    socket.broadcast.emit('message', generateMessage('A new user has joined!'))
+        socket.join(room);
+
+        socket.emit('message', generateMessage('Welcome'));
+
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined`))
+
+    })
 
     socket.on('sendMessage', (value, callback) => {
         const filter = new Filter();
