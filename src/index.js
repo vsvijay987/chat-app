@@ -31,38 +31,52 @@ io.on('connection', (socket) => {
 
         socket.join(user.room);
 
-        socket.emit('message', generateMessage('Welcome'));
+        socket.emit('message', generateMessage('Admin', 'Welcome'));
 
-        socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined`))
+        socket.broadcast.to(user.room).emit('message', generateMessage(user.username, `${user.username} has joined`))
+
+        io.to(user.room).emit('roomData', {
+            room: user.room,
+            users: getUsersInRoom(user.room)
+        })
 
         callback();
 
     })
 
+    socket.on('disconnect', () => {
+        const user = removeUser(socket.id);
+        if(user){
+            io.to(user.room).emit('message', generateMessage(user.username, `${user.username} has left!`));
+            io.to(user.room).emit('roomData', {
+                room: user.room,
+                users: getUsersInRoom(user.room)
+            })
+        }
+    })
+
     socket.on('sendMessage', (value, callback) => {
+        const user = getUser(socket.id);
         const filter = new Filter();
 
         if(filter.isProfane(value)){
             return callback('Profanity not allowed!')
         }
 
-        io.emit('message', generateMessage(value))
+        io.to(user.room).emit('message', generateMessage(user.username, value))
         callback()
-    })
-
-    socket.on('disconnect', () => {
-        const user = removeUser(socket.id);
-        if(user){
-            io.to(user.room).emit('message', generateMessage(`${user.username} has left!`))
-        }
     })
 
     socket.on('sendLocation', (coords, callback) => {
+
+        const user = getUser(socket.id);
         const data = `https://google.com/maps?q=${coords.latitude},${coords.longitude}`
-        io.emit('LocationMessage', generateLocationMessage(data));
-        // io.emit('message', data)
+
+        io.to(user.room).emit('LocationMessage', generateLocationMessage(user.username, data));
         callback()
     })
+
+    
 })
 
 app.use(express.static(publicDirectoryPath));
